@@ -9,34 +9,58 @@ def load_data(file_path) -> pd.DataFrame:
     return pd.read_excel(file_path)
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Clean up the dataset by handling missing values and duplicates."""
-    # Drop duplicate rows
-    df = df.drop_duplicates()
-    # Fill missing values with the mean of the column
-    for column in df.select_dtypes(include=[np.number]).columns:
-        df[column].fillna(df[column].mean(), inplace=True)
-    # Fill missing values in categorical columns with the mode
-    for column in df.select_dtypes(include=[object]).columns:
-        df[column].fillna(df[column].mode()[0], inplace=True)
+    """Clean and preprocess the dataset."""
+    # Row 0 contains headers, so set it as the header
+    df.columns = df.iloc[0]
+    # Drop the first row as it is now the header
+    df = df.iloc[1:]
+    # Drop rows with any missing values
+    df = df.dropna()
+    # Reset index
+    df = df.reset_index(drop=True)
+    # Drop irrelevant columns (The Region is always USA)
+    df = df.drop(columns=['Region'])
+
+    # Renaming columns for ease of use
+    # First strip newline characters from column names, replace with spaces
+    df.columns = df.columns.str.replace('\n', ' ')
+    # Now rename columns to shorter names
+    df = df.rename(columns={
+        'Not Seasonally-Adjusted Purchase-Only Index  (1991Q1=100)': 'Index',
+        'Seasonally-Adjusted Purchase-Only Index  (1991Q1=100)': 'Adjusted Index',
+        'Not Seasonally-Adjusted Purchase-Only Index % Change Over  Previous Quarter': 'Index Change Over Previous Quarter',
+        'Seasonally-Adjusted Purchase-Only Index % Change Over  Previous Quarter': 'Adjusted Index Change Over Previous Quarter',
+        'Not Seasonally-Adjusted Purchase-Only Index % Change Over  Previous 4 Quarters': 'Index Change Over Previous Year',
+        'Seasonally-Adjusted Purchase-Only Index % Change Over  Previous 4 Quarters': 'Adjusted Index Change Over Previous Year'
+    })
+    # Convert all columns to numeric type
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
     return df
 
 def main(): 
-    # Load dataset
+    # Load initial dataset
     df = load_data('data/raw/hpi_po_summary.xlsx')
-    # Display initial data info
-    print("Initial Data Info:")
-    print(df.info())
-    # Display first few rows of the dataset
-    print("\nFirst few rows of the dataset:")
+    # Display column names of the initial dataset
+    print("Initial dataset columns:")
+    print(df.columns)
+    # Display first few rows of the initial dataset
+    print("\nFirst few rows of the initial dataset:")
     print(df.head())
-    # Clean up dataset
+    # Clean up initial dataset
     cleaned_df = clean_data(df)
-    # Display cleaned data info
-    print("\nCleaned Data Info:")
-    print(cleaned_df.info())
+    # Display cleaned dataset columns
+    print("\nCleaned dataset columns:")
+    print(cleaned_df.columns)
     # Display first few rows of the cleaned dataset
     print("\nFirst few rows of the cleaned dataset:")
     print(cleaned_df.head())
+    # Check if value types are numeric where expected
+    print("\nData types of cleaned dataset columns:")
+    for col in cleaned_df.columns:
+        print(f"{col}: {cleaned_df[col].dtype}")
+    # Display size of cleaned dataset
+    print(f"\nCleaned dataset size: {cleaned_df.shape}")
     # # Save cleaned dataset to a new file
     # cleaned_df.to_excel('data/clean/hpi_po_summary_cleaned.xlsx', index=False)
 
