@@ -6,6 +6,11 @@ import numpy as np
 # plz free feel modify the main logic and just tweak shapes / names if needed.
 # -------------------------------------------------------------------
 
+# normalize in log-space (log-sum-exp) to keep numbers sane
+def logsumexp(vec):
+    m = np.max(vec)
+    return m + np.log(np.sum(np.exp(vec - m)))
+
 def initialize_hmm_params(K, observations, seed=None):
     """
     Simple helper to initialize HMM parameters.
@@ -85,10 +90,7 @@ def forward_pass(observations, params):
         log_emiss[k] = gaussian_logpdf(observations[0], means[k], vars_[k])
         log_alpha[0, k] = np.log(pi[k] + 1e-32) + log_emiss[k]
 
-    # normalize in log-space (log-sum-exp) to keep numbers sane
-    def logsumexp(vec):
-        m = np.max(vec)
-        return m + np.log(np.sum(np.exp(vec - m)))
+    
 
     # recursion
     for t in range(1, T):
@@ -120,10 +122,6 @@ def backward_pass(observations, params):
     K = len(pi)
 
     log_beta = np.zeros((T, K))
-
-    def logsumexp(vec):
-        m = np.max(vec)
-        return m + np.log(np.sum(np.exp(vec - m)))
 
     # init: log_beta_T(k) = 0 for all k
     log_beta[T - 1, :] = 0.0
@@ -193,10 +191,6 @@ def baum_welch_train(observations, K, max_iters=100, tol=1e-6, n_restarts=3, see
             # xi_t(i,j): pairwise posteriors
             xi = np.zeros((T - 1, K, K))
 
-            def logsumexp(vec):
-                m = np.max(vec)
-                return m + np.log(np.sum(np.exp(vec - m)))
-
             for t in range(T - 1):
                 for i in range(K):
                     for j in range(K):
@@ -218,11 +212,13 @@ def baum_welch_train(observations, K, max_iters=100, tol=1e-6, n_restarts=3, see
             gamma_sum = gamma.sum(axis=0)  # shape (K,)
 
             # update pi
-            params["pi"] = gamma[0] / gamma[0].sum()
+            # add small constant to avoid div by zero
+            params["pi"] = gamma[0] / (gamma[0].sum() + 1e-32)
 
             # update A
+            # add small constant to avoid div by zero
             xi_sum = xi.sum(axis=0)  # shape (K, K)
-            params["A"] = xi_sum / xi_sum.sum(axis=1, keepdims=True)
+            params["A"] = xi_sum / (xi_sum.sum(axis=1, keepdims=True) + 1e-32)
 
             # update means and vars
             new_means = np.zeros(K)
