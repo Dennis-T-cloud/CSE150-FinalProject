@@ -1,0 +1,19 @@
+For hpi_po_summary_cleaned, it is the same as the raw file with the following changes:
+    - Starting at 1st quarter 1992 instead of 1991 (explanation below)
+    - Column names changed for brevity
+    - Removed the Region column since it is unecessary (The Region is always USA)
+
+hpi_po_summary_condensed is similar, but all % change columns are dropped.
+
+For index_observations, each entry is the Purchase-Only Index for 
+that quarter. It is ordered sequentially, starting from the 1st quarter
+of 1992 and ending on the 2nd quarter of 2025.
+
+The same goes for adjusted_index_observations, except each entry is 
+the Seasonally-Adjusted Purchase-Only Index. 
+
+NOTE: Although the dataset starts at the 1st quarter of 1991, certain values 
+are missing, so I opted to remove them (notably all the % change entries).
+This is why entries start at the 1st quarter of 1992 instead.
+These entries aren't too entirely important to the project I don't think, so 
+let me know if you want me to include it again.
