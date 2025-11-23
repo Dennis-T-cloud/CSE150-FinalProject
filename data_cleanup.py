@@ -3,6 +3,7 @@
 
 import pandas as pd
 import numpy as np
+import os
 
 def load_data(file_path) -> pd.DataFrame:
     """Load data from a XLSX file."""
@@ -47,6 +48,7 @@ def main():
     # Display first few rows of the initial dataset
     print("\nFirst few rows of the initial dataset:")
     print(df.head())
+
     # Clean up initial dataset
     cleaned_df = clean_data(df)
     # Display cleaned dataset columns
@@ -61,8 +63,22 @@ def main():
         print(f"{col}: {cleaned_df[col].dtype}")
     # Display size of cleaned dataset
     print(f"\nCleaned dataset size: {cleaned_df.shape}")
-    # # Save cleaned dataset to a new file
-    # cleaned_df.to_excel('data/clean/hpi_po_summary_cleaned.xlsx', index=False)
+    
+    # Save cleaned dataset to a new file
+    cleaned_df.to_excel('data/clean/hpi_po_summary_cleaned.xlsx', index=False)
+    
+    # Create condensed dataset with columns relevant to HMM
+    condensed_df = cleaned_df[['Year', 'Quarter', 'Index', 'Adjusted Index']]
+    # Save condensed dataset to a new file
+    condensed_df.to_excel('data/clean/hpi_po_summary_condensed.xlsx', index=False)
+    
+    # Save Index observations to a separate txt file
+    with open('data/clean/index_observations.txt', 'w') as f:
+        f.write(' '.join(condensed_df['Index'].astype(str)))
+    # Save Adjusted Index observations to a separate txt file
+    with open('data/clean/adjusted_index_observations.txt', 'w') as f:
+        f.write(' '.join(condensed_df['Adjusted Index'].astype(str)))
+    
 
    
 
