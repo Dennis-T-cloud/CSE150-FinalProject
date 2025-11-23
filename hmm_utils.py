@@ -147,10 +147,11 @@ def compute_posteriors(log_alpha, log_beta):
     T, K = log_alpha.shape
     log_gamma = log_alpha + log_beta
 
-    # normalize each time slice
-    log_gamma = log_gamma - log_gamma.max(axis=1, keepdims=True)
+    # normalize each time slice using log-sum-exp
+    for t in range(T):
+        log_norm = logsumexp(log_gamma[t])
+        log_gamma[t] = log_gamma[t] - log_norm
     gamma = np.exp(log_gamma)
-    gamma = gamma / gamma.sum(axis=1, keepdims=True)
     return gamma
 
 
